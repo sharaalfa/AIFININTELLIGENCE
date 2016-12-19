@@ -1,0 +1,41 @@
+import sys, time, os
+import urllib
+from mechanize import Browser
+import mechanize
+#LOGIN_URL = 'http://www.cbr.ru/hd_base/?PrtId=co_schema'
+LOGIN_URL = 'http://www.cbr.ru/credit/coinfo.asp?id=450000005'
+SEARCH_URL = 'http://www.cbr.ru/credit/coinfo.asp?id=450000005'
+FIXED_QUERY = 'Форма 101'
+VARIABLE_QUERY = ['actor=%s' % actor for actor in
+                  ('2005',
+                   '2006')]
+def fetch():
+    result_no = 0
+    br = Browser()
+    br.open(LOGIN_URL)
+    if 'Redirecting' in br.title():
+        resp = br.follow_link(text_regex='click here')
+
+    for actor in VARIABLE_QUERY:
+        print( sys.stderr, '***', actor)
+        br.open()
+        br.open(SEARCH_URL + FIXED_QUERY + actor)
+        nice_links = [l for l in br.links()
+                      if 'good_path' in l.url
+                      and 'credential' in l.url]
+        if not nice_links:
+            break
+        for link in nice_links:
+            try:
+                response = br.follow_link(link)
+                print(sys.stderr, br.title())
+                result_no += 1
+                out = open('result_%04d' % result_no, 'w')
+                out.close()
+            except mechanize.response_seek_wrapper:
+                print(sys.stderr, "Response error (probably 404)")
+            time.sleep(1)
+
+
+
+
